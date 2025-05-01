@@ -1,0 +1,1 @@
+return a random json object.  Your response should be a valid json object only.

@@ -1,0 +1,77 @@
+================================================================================
+Prompt Prism Results - 2025-04-30T19:19:32.350599
+================================================================================
+
+PROMPT:
+--------------------------------------------------------------------------------
+return a random json object.  Your response should be a valid json object only.
+
+================================================================================
+
+RESPONSE #1:
+--------------------------------------------------------------------------------
+Provider: anthropic
+Model: claude-3-5-sonnet-20240620
+Timestamp: 2025-04-30T19:19:26.879820
+
+Response:
+{
+  "id": 7392,
+  "name": "Cosmic Penguin",
+  "type": "Interstellar Creature",
+  "age": 1042,
+  "abilities": ["Ice Breath", "Gravity Manipulation", "Warp Speed"],
+  "homeworld": {
+    "name": "Frostoria Prime",
+    "galaxy": "Andromeda",
+    "coordinates": {
+      "x": -293.5,
+      "y": 871.2,
+      "z": 104.9
+    }
+  },
+  "favorite_foods": ["Stardust", "Nebula Nectar", "Frozen Comets"],
+  "is_legendary": true,
+  "friends_count": 42,
+  "last_sighting": "2285-09-17T03:24:00Z"
+}
+
+Metadata:
+- Latency: 4.16s
+- Token count: 236
+- stop_reason: end_turn
+- message_id: msg_01SaFFVw3keiqJ8Ao9WktQM8
+- prompt_tokens: 24
+- completion_tokens: 212
+- cost: {'total': 0.003252, 'input_tokens': 24, 'output_tokens': 212}
+
+--------------------------------------------------------------------------------
+
+RESPONSE #2:
+--------------------------------------------------------------------------------
+Provider: openai
+Model: gpt-3.5-turbo
+Timestamp: 2025-04-30T19:19:26.879820
+
+Response:
+{
+    "name": "John",
+    "age": 30,
+    "city": "New York",
+    "hobbies": ["reading", "running", "traveling"],
+    "isStudent": false
+}
+
+Metadata:
+- Latency: 0.76s
+- Token count: 71
+- prompt_tokens: 24
+- completion_tokens: 47
+- finish_reason: stop
+- cost: {'total': 8.2e-05, 'input_tokens': 24, 'output_tokens': 47}
+
+--------------------------------------------------------------------------------
+
+================================================================================
+End of Results
+================================================================================
