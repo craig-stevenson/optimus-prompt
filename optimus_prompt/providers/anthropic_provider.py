@@ -1,7 +1,7 @@
 import time
-from typing import Dict, Any
+from typing import Dict, Any, List
 
-from anthropic import Anthropic
+from anthropic import Anthropic, APIError, APIConnectionError, APITimeoutError
 
 from ..core.prompt import Prompt
 from ..core.response import Response
@@ -143,6 +143,37 @@ class AnthropicProvider(BaseProvider):
         output_cost = (tokens["output_tokens"] / 1_000_000) * pricing["output_per_million"]
         
         return round(input_cost + output_cost, 6)
+
+
+    @staticmethod
+    def list_available_models() -> List[str]:
+        """Get a list of available models from Anthropic.
+
+        Returns:
+            List[str]: List of available model identifiers
+
+        Raises:
+            ProviderError: If there is an error fetching the model list
+        """
+        try:
+            # Create a temporary client to fetch models
+            client = Anthropic()
+            
+            # Call Anthropic's list models API
+            models = client.models.list()
+            
+            # Extract model IDs from the response
+            model_ids = [model.id for model in models.data]
+            
+            return model_ids
+
+        except (APIError, APIConnectionError, APITimeoutError) as e:
+            # Fallback to known models from pricing dictionary if API call fails
+            fallback_models = list(CLAUDE_PRICING.keys())
+            return fallback_models
+            
+        except Exception as e:
+            raise ProviderError(f"Error fetching available models from Anthropic: {str(e)}")
 
 
 class ProviderError(Exception):

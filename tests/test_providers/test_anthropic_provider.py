@@ -1,8 +1,10 @@
 import os
 import pytest
+from unittest.mock import patch, MagicMock
 
+from anthropic import APIError
 from optimus_prompt.core import Prompt
-from optimus_prompt.providers import AnthropicProvider
+from optimus_prompt.providers import AnthropicProvider, ProviderError
 
 
 @pytest.fixture
@@ -72,3 +74,53 @@ def test_generate_response(
     print(f"Latency: {response.metadata['latency']:.2f}s")
     print(f"Message ID: {response.metadata['message_id']}")
     print(f"Stop Reason: {response.metadata['stop_reason']}")
+
+
+def test_list_available_models_success():
+    """Test successfully listing available models."""
+    # Mock the Anthropic client and models.list() response
+    mock_model = MagicMock()
+    mock_model.id = "claude-3-5-opus-20240620"
+    mock_models = MagicMock()
+    mock_models.data = [mock_model]
+    
+    with patch('anthropic.Anthropic') as mock_anthropic:
+        mock_anthropic.return_value.models.list.return_value = mock_models
+        
+        # Call the method
+        models = AnthropicProvider.list_available_models()
+        
+        # Verify results
+        assert isinstance(models, list), "Should return a list"
+        assert len(models) > 0, "Should return at least one model"
+        assert "claude-3-5-opus-20240620" in models, "Should include expected model"
+        assert all(m.startswith('claude-') for m in models), "All models should be Claude models"
+
+
+def test_list_available_models_api_error():
+    """Test fallback behavior when API call fails."""
+    with patch('anthropic.Anthropic') as mock_anthropic:
+        # Simulate API error
+        mock_anthropic.return_value.models.list.side_effect = APIError("API Error")
+        
+        # Call the method
+        models = AnthropicProvider.list_available_models()
+        
+        # Verify fallback to CLAUDE_PRICING keys
+        assert isinstance(models, list), "Should return a list"
+        assert len(models) > 0, "Should return at least one model"
+        assert "claude-3-5-opus-20240620" in models, "Should include models from CLAUDE_PRICING"
+        assert "claude-3-5-sonnet-20240620" in models, "Should include models from CLAUDE_PRICING"
+
+
+def test_list_available_models_unexpected_error():
+    """Test error handling for unexpected exceptions."""
+    with patch('anthropic.Anthropic') as mock_anthropic:
+        # Simulate unexpected error
+        mock_anthropic.return_value.models.list.side_effect = Exception("Unexpected error")
+        
+        # Verify error handling
+        with pytest.raises(ProviderError) as exc_info:
+            AnthropicProvider.list_available_models()
+        
+        assert "Error fetching available models" in str(exc_info.value)

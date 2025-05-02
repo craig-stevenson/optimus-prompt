@@ -1,7 +1,8 @@
 import os
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
 
+from openai import OpenAIError
 from optimus_prompt.core import Prompt
 from optimus_prompt.providers import OpenAIProvider
 from optimus_prompt.providers.openai_provider import GPT_PRICING, ProviderError
@@ -161,3 +162,60 @@ def test_error_handling(mock_openai: Mock) -> None:
     with pytest.raises(ProviderError) as exc_info:
         provider.generate(prompt)
     assert "Error generating response from OpenAI" in str(exc_info.value)
+
+
+def test_list_available_models_success():
+    """Test successfully listing available models."""
+    # Mock the OpenAI client and models.list() response
+    mock_model1 = MagicMock()
+    mock_model1.id = "gpt-4"
+    mock_model2 = MagicMock()
+    mock_model2.id = "gpt-3.5-turbo"
+    mock_model3 = MagicMock()
+    mock_model3.id = "text-davinci-003"  # Should be filtered out
+    
+    mock_models = MagicMock()
+    mock_models.data = [mock_model1, mock_model2, mock_model3]
+    
+    with patch('openai.OpenAI') as mock_openai:
+        mock_openai.return_value.models.list.return_value = mock_models
+        
+        # Call the method
+        models = OpenAIProvider.list_available_models()
+        
+        # Verify results
+        assert isinstance(models, list), "Should return a list"
+        assert len(models) == 2, "Should return only GPT models"
+        assert "gpt-4" in models, "Should include GPT-4"
+        assert "gpt-3.5-turbo" in models, "Should include GPT-3.5"
+        assert "text-davinci-003" not in models, "Should not include non-GPT models"
+        assert all(m.startswith(('gpt-3.5', 'gpt-4')) for m in models), "All models should be GPT-3.5 or GPT-4"
+
+
+def test_list_available_models_api_error():
+    """Test fallback behavior when API call fails."""
+    with patch('openai.OpenAI') as mock_openai:
+        # Simulate API error
+        mock_openai.return_value.models.list.side_effect = OpenAIError("API Error")
+        
+        # Call the method
+        models = OpenAIProvider.list_available_models()
+        
+        # Verify fallback to GPT_PRICING keys
+        assert isinstance(models, list), "Should return a list"
+        assert len(models) > 0, "Should return at least one model"
+        assert "gpt-4" in models, "Should include models from GPT_PRICING"
+        assert "gpt-3.5-turbo" in models, "Should include models from GPT_PRICING"
+
+
+def test_list_available_models_unexpected_error():
+    """Test error handling for unexpected exceptions."""
+    with patch('openai.OpenAI') as mock_openai:
+        # Simulate unexpected error
+        mock_openai.return_value.models.list.side_effect = Exception("Unexpected error")
+        
+        # Verify error handling
+        with pytest.raises(ProviderError) as exc_info:
+            OpenAIProvider.list_available_models()
+        
+        assert "Error fetching available models" in str(exc_info.value)

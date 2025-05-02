@@ -1,8 +1,9 @@
 import time
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from openai import OpenAI
 from openai.types.chat import ChatCompletion
+from openai import OpenAIError
 
 from ..core.prompt import Prompt
 from ..core.response import Response
@@ -141,6 +142,39 @@ class OpenAIProvider(BaseProvider):
         output_cost = (tokens["output_tokens"] / 1_000_000) * pricing["output_per_million"]
         
         return round(input_cost + output_cost, 6)
+
+    @staticmethod
+    def list_available_models() -> List[str]:
+        """Get a list of available models from OpenAI.
+
+        Returns:
+            List[str]: List of available model identifiers
+
+        Raises:
+            ProviderError: If there is an error fetching the model list
+        """
+        try:
+            # Create a temporary client to fetch models
+            client = OpenAI()
+            
+            # Call OpenAI's list models API
+            models = client.models.list()
+            
+            # Extract model IDs and filter to only include GPT models
+            model_ids = [
+                model.id for model in models.data
+                if model.id.startswith(('gpt-3.5', 'gpt-4'))
+            ]
+            
+            return model_ids
+
+        except OpenAIError as e:
+            # Fallback to known models from pricing dictionary if API call fails
+            fallback_models = list(GPT_PRICING.keys())
+            return fallback_models
+            
+        except Exception as e:
+            raise ProviderError(f"Error fetching available models from OpenAI: {str(e)}")
 
 
 class ProviderError(Exception):

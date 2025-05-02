@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from ..core.prompt import Prompt
 from ..core.response import Response
@@ -57,6 +57,19 @@ class BaseProvider(ABC):
 
         Returns:
             float: The total cost in USD
+        """
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def list_available_models() -> List[str]:
+        """Get a list of available models for this provider.
+
+        Returns:
+            List[str]: List of model identifiers that can be used with this provider
+
+        Raises:
+            ProviderError: If there is an error fetching the model list
         """
         pass
 

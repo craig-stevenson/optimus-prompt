@@ -8,6 +8,9 @@ from optimus_prompt.core import ResponseWriter
 # Load environment variables from .env file
 load_dotenv()
 
+def list_models():
+    print(OpenAIProvider.list_available_models())
+
 def main():
     # Create a prompt from a file
     prompt = Prompt.from_file("prompt.txt")
@@ -53,11 +56,5 @@ def main():
         print(f"\nTotal cost: ${total_cost:.4f}")
 
 if __name__ == "__main__":
-    # Create example prompt.txt if it doesn't exist
-    if not os.path.exists("prompt.txt"):
-        with open("prompt.txt", "w") as f:
-            f.write("Explain quantum computing in simple terms.")
-        print("Created example prompt.txt")
-
-    # Run the main function
-    main()
+    #main()
+    list_models()
